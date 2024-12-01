@@ -1,4 +1,22 @@
--- Place this script in StarterPlayerScripts or as a LocalScript.
+local Toggle = Tab:CreateToggle({
+    Name = "CamLock",  -- Renamed to CamLock for clarity
+    CurrentValue = false,
+    Flag = "Toggle",  -- Flag for configuration saving
+    Callback = function(Value)
+        -- The value is a boolean: true if enabled, false if disabled
+        if Value then
+            -- Enable CamLock
+            camLockEnabled = true
+            print("CamLock Enabled.")
+        else
+            -- Disable CamLock
+            camLockEnabled = false
+            print("CamLock Disabled.")
+        end
+    end,
+})
+
+-- Assuming the rest of the CamLock script you already have remains the same
 
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -10,28 +28,26 @@ local camera = workspace.CurrentCamera
 local targetPlayer = nil
 local camLockEnabled = false
 
--- FOV circle setup
+-- FOV Circle setup
 local fovCircle = Drawing.new("Circle")
 fovCircle.Color = Color3.new(1, 1, 1) -- White
 fovCircle.Thickness = 2
-fovCircle.Radius = 90 -- Adjust the radius as needed
+fovCircle.Radius = 100 -- Adjust the radius as needed
 fovCircle.Visible = true
 fovCircle.Transparency = 1
 
 -- Function to update the FOV circle position
 local function updateFOVCircle()
     local mouse = localPlayer:GetMouse()
-    -- Convert mouse position to 3D world space
-    local mouseUnitRay = camera:ScreenPointToRay(mouse.X, mouse.Y) -- Ray from camera through mouse
-    local worldPoint = mouseUnitRay.Origin + mouseUnitRay.Direction * 10 -- Project into the 3D world (10 studs ahead)
+    local mouseUnitRay = camera:ScreenPointToRay(mouse.X, mouse.Y)
+    local worldPoint = mouseUnitRay.Origin + mouseUnitRay.Direction * 10
 
-    -- Project the 3D point back to 2D screen coordinates
     local screenPoint, onScreen = camera:WorldToViewportPoint(worldPoint)
 
     if onScreen then
-        fovCircle.Position = Vector2.new(screenPoint.X, screenPoint.Y) -- Place the circle at the screen's calculated 2D point
+        fovCircle.Position = Vector2.new(screenPoint.X, screenPoint.Y)
     else
-        fovCircle.Visible = false -- Hide the circle if the mouse isn't pointing at anything visible
+        fovCircle.Visible = false
     end
 end
 
@@ -64,14 +80,9 @@ end
 -- Function to toggle camera lock
 local function toggleCamLock()
     if camLockEnabled then
-        camLockEnabled = false
-        camera.CameraSubject = localPlayer.Character or localPlayer
-        print("Camera lock disabled.")
-    else
         targetPlayer = getClosestPlayerToMouse()
 
         if targetPlayer then
-            camLockEnabled = true
             print("Camera locked on to: " .. targetPlayer.Name)
         else
             print("No valid target found within FOV.")
@@ -94,9 +105,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
         toggleCamLock()
     end
-end)
-
--- Clean up the FOV circle on script destruction
-game:BindToClose(function()
-    fovCircle:Remove()
 end)
