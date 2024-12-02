@@ -10,6 +10,9 @@ local camera = workspace.CurrentCamera
 local targetPlayer = nil
 local camLockEnabled = false
 
+-- Default keybind for camlock
+local currentKeybind = Enum.KeyCode.T
+
 -- FOV circle setup
 local fovCircle = Drawing.new("Circle")
 fovCircle.Color = Color3.new(1, 1, 1) -- White
@@ -17,6 +20,55 @@ fovCircle.Thickness = 2
 fovCircle.Radius = 100 -- Adjust the radius as needed
 fovCircle.Visible = true
 fovCircle.Transparency = 1
+
+-- GUI Setup (smaller version)
+local gui = Instance.new("ScreenGui")
+local frame = Instance.new("Frame")
+local titleLabel = Instance.new("TextLabel")
+local keybindTextLabel = Instance.new("TextLabel")
+local keybindButton = Instance.new("TextButton")
+
+gui.Name = "CamLockGui"
+gui.Parent = game.CoreGui -- Parent to CoreGui so it shows in-game
+
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 200, 0, 100) -- Smaller size
+frame.Position = UDim2.new(0.05, 0, 0.8, 0) -- Bottom-left corner
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0.3, 0)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.Text = "CamLock"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 16
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = frame
+
+keybindTextLabel.Name = "KeybindTextLabel"
+keybindTextLabel.Size = UDim2.new(1, 0, 0.3, 0)
+keybindTextLabel.Position = UDim2.new(0, 0, 0.3, 0)
+keybindTextLabel.Text = "Current Key: " .. currentKeybind.Name
+keybindTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+keybindTextLabel.Font = Enum.Font.SourceSans
+keybindTextLabel.TextSize = 12
+keybindTextLabel.BackgroundTransparency = 1
+keybindTextLabel.Parent = frame
+
+keybindButton.Name = "KeybindButton"
+keybindButton.Size = UDim2.new(0.8, 0, 0.3, 0)
+keybindButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+keybindButton.Text = "Change Keybind"
+keybindButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+keybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+keybindButton.Font = Enum.Font.SourceSans
+keybindButton.TextSize = 12
+keybindButton.Parent = frame
 
 -- Function to update the FOV circle position
 local function updateFOVCircle()
@@ -79,6 +131,28 @@ local function toggleCamLock()
     end
 end
 
+-- Listen for key press to toggle camera lock
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == currentKeybind then
+        toggleCamLock()
+    end
+end)
+
+-- Change the keybind for CamLock
+keybindButton.MouseButton1Click:Connect(function()
+    keybindTextLabel.Text = "Press a key to set the new keybind"
+    
+    -- Wait for the user to press a key
+    UserInputService.InputBegan:Wait()
+    
+    local input = UserInputService.InputBegan:Wait()
+    
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        currentKeybind = input.KeyCode
+        keybindTextLabel.Text = "Current Key: " .. currentKeybind.Name
+    end
+end)
+
 -- Update camera position and FOV circle when locked
 RunService.RenderStepped:Connect(function()
     updateFOVCircle()
@@ -86,13 +160,6 @@ RunService.RenderStepped:Connect(function()
     if camLockEnabled and targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local targetPart = targetPlayer.Character.HumanoidRootPart
         camera.CFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
-    end
-end)
-
--- Listen for key press to toggle camera lock
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
-        toggleCamLock()
     end
 end)
 
